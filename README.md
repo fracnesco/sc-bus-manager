@@ -1,8 +1,12 @@
 # BusManager
 
-Register busses with names, add a gui to create new entries, preview signal in busses and monitor them on the main out. Instead of remembering that the
-reverb send is bus 16, you call it `\reverb` and route to it by name — and you
-can watch a meter to see whether anything is actually going into it and monitor the singal by ear.
+**Buses with names, and a window to see them in.** A SuperCollider extension.
+
+Register buses under names, add a GUI to create new entries, preview the signal
+in a bus and monitor it on the main out. Instead of remembering that the reverb
+send is bus 16, you call it `\reverb` and route to it by name — and you can
+watch a meter to see whether anything is actually going into it, and monitor the
+signal by ear.
 
 ```supercollider
 s.boot;
@@ -12,16 +16,66 @@ BusManager.gui;                  // add, remove, meter, listen
 { Out.ar(BusManager.index(\reverb), PinkNoise.ar(0.1) ! 2) }.play;
 ```
 
-It depends on nothing. If [ModuleCommon](../module%20common) happens to be
-installed alongside it, OneShot, LongSample and AdaptiveTextures and other modules start accepting
-names wherever they take a bus — see [modules](#modules) below.
+It depends on nothing — no plugins, no other quarks. If **ModuleCommon** happens
+to be installed alongside it, OneShot, LongSample and AdaptiveTextures start
+accepting names wherever they take a bus — see [Modules](#modules) below.
+
+Written for SuperCollider 3.13 on macOS. Nothing in it is platform specific
+apart from the symlink in `install.scd`, which Linux shares and Windows does not.
 
 ## Install
 
-Symlink the repository into your SuperCollider extensions folder and recompile
-the class library (`Language -> Recompile Class Library`, or ctrl/cmd + shift + L).
-There is an `install.scd` in the repository that does it for you: open it and
-evaluate it.
+### As a quark
+
+```supercollider
+Quarks.install("https://github.com/fracnesco/sc-bus-manager.git");
+thisProcess.recompile;
+```
+
+`Quarks.install` clones the repository into your `downloaded-quarks` folder and
+puts it on the class path; the recompile is what makes the classes exist, and is
+the same thing as `Language -> Recompile Class Library` (ctrl/cmd + shift + L).
+
+Afterwards:
+
+```supercollider
+Quarks.update("sc-bus-manager");      // pull the newest version, then recompile
+Quarks.uninstall("sc-bus-manager");   // take it off the class path
+Quarks.gui;                           // see what is installed
+```
+
+The quark goes by the name of the repository, `sc-bus-manager`; the class inside
+it is `BusManager`.
+
+### From a clone
+
+If you would rather have a working copy you can edit, clone it wherever you keep
+things and link it into the extensions folder:
+
+```sh
+git clone https://github.com/fracnesco/sc-bus-manager.git
+```
+
+There is an `install.scd` in the repository that does the linking for you: open
+it and evaluate it, then recompile the class library. It symlinks the folder
+into `Platform.userExtensionDir` and tells you what it did.
+
+On Windows there is no `ln -s`, so use the quark, or copy the folder into the
+extensions folder by hand — `Platform.userExtensionDir.openOS` opens it.
+
+Install it one way or the other, **not both**: two copies on the class path is a
+duplicate class error at compile time.
+
+### Check that it took
+
+```supercollider
+BusManager.names;    // the hardware ins and outs, seeded on first use
+BusManager.gui;      // the window
+```
+
+Select `BusManager` and press cmd/ctrl + d for the help file, and see
+[examples/bus-manager-demo.scd](examples/bus-manager-demo.scd) for a walkthrough
+you can evaluate a block at a time.
 
 ## The registry
 
@@ -135,13 +189,16 @@ played, because that is a feedback loop — which is what clicking listen on
 ## Layouts
 
 The set of buses you have declared, saved to a file so a rig comes back the way
-you left it. They live in the repository's own `layouts/` folder — a bare name
-goes there and gets an `.scd` extension, a path with a slash in it is used as
-given.
+you left it. They live in the `layouts/` folder next to the class files, wherever
+the extension ended up — inside `downloaded-quarks/sc-bus-manager/` for a quark
+install, inside the clone for a symlinked one. A bare name goes there and gets an
+`.scd` extension; a path with a slash in it is used as given, which is the way to
+keep a layout with a piece rather than with the extension.
 
 ```supercollider
-BusManager.saveLayout("tonight");     // -> <repo>/layouts/tonight.scd
+BusManager.saveLayout("tonight");     // -> <extension>/layouts/tonight.scd
 BusManager.loadLayout("tonight");
+BusManager.saveLayout("~/Music/piece/buses.scd");
 BusManager.layouts;                   // what the window's dropdown offers
 BusManager.layoutDir;
 ```
@@ -155,10 +212,14 @@ Loading is always explicit. Nothing is restored at startup by itself, so a
 layout you have forgotten about can never quietly claim bus indices while you
 are setting up.
 
+Saved layouts are ignored by git, so updating the extension does not touch them
+and they never turn up in a pull request.
+
 ## Modules
 
-With [ModuleCommon](../module%20common) installed, every routing argument in
-OneShot, LongSample and AdaptiveTextures takes a name as readily as an index:
+With **ModuleCommon** installed — a separate extension of mine, and entirely
+optional here — every routing argument in OneShot, LongSample and
+AdaptiveTextures takes a name as readily as an index:
 
 ```supercollider
 m = OneShot(\drums, 16, outBus: \reverb);
@@ -202,7 +263,20 @@ The registry registers with `ServerBoot`, `ServerTree` and `ServerQuit`:
 
 | file | what it holds |
 |------|---------------|
-| `classes/BusManager.sc` | the registry: add, remove, resolve, meter, listen, layouts, server lifecycle |
-| `classes/BusManagerEntry.sc` | one named bus, and who is allowed to free it |
-| `classes/BusManagerGUI.sc` | the window |
-| `examples/bus-manager-demo.scd` | a walkthrough you can evaluate line by line |
+| [classes/BusManager.sc](classes/BusManager.sc) | the registry: add, remove, resolve, meter, listen, layouts, server lifecycle |
+| [classes/BusManagerEntry.sc](classes/BusManagerEntry.sc) | one named bus, and who is allowed to free it |
+| [classes/BusManagerGUI.sc](classes/BusManagerGUI.sc) | the window |
+| [HelpSource/Classes/BusManager.schelp](HelpSource/Classes/BusManager.schelp) | the help file, cmd/ctrl + d on the class name |
+| [examples/bus-manager-demo.scd](examples/bus-manager-demo.scd) | a walkthrough you can evaluate line by line |
+| [install.scd](install.scd) | symlinks the repository into the extensions folder |
+| [sc-bus-manager.quark](sc-bus-manager.quark) | the quark manifest, named after the repository so `Quarks` can find it |
+
+## Issues
+
+Bug reports and questions are welcome in
+[Issues](https://github.com/fracnesco/sc-bus-manager/issues). If something
+misbehaves, the post window usually has the half of the story I need.
+
+## License
+
+MIT — see [LICENSE](LICENSE).

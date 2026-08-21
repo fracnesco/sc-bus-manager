@@ -19,7 +19,7 @@ BusManager.gui;
 Everything is on the class: there is one registry per session, the way there is
 one server, and no instance to keep hold of.
 
-It depends on nothing. When link::Classes/ModuleCommon:: is installed alongside
+It depends on nothing. When strong::ModuleCommon:: is installed alongside
 it, OneShot, LongSample and AdaptiveTextures accept a name wherever they take a
 bus, and a module set to a name follows it - see link::#Modules:: below.
 

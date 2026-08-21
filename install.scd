@@ -2,6 +2,19 @@
 // Evaluate the block below, then recompile the class library
 // (Language -> Recompile Class Library, or ctrl/cmd + shift + L).
 //
+// This is the route for a clone you want to keep editing. If you would
+// rather have it installed and updated for you, do not use this file -
+// install it as a quark instead, from a fresh sclang:
+//
+//   Quarks.install("https://github.com/fracnesco/sc-bus-manager.git");
+//   thisProcess.recompile;
+//
+// One or the other, not both: two copies on the class path is a
+// duplicate class error at compile time.
+//
+// ln -s is macOS and Linux. On Windows, use the quark, or copy this
+// folder into Platform.userExtensionDir by hand - .openOS opens it.
+//
 // BusManager depends on nothing. If ModuleCommon happens to be installed
 // as well, OneShot, LongSample and AdaptiveTextures start accepting bus
 // names - m.outBus = \reverb - the moment this is compiled. Neither
