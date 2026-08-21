@@ -1,8 +1,8 @@
 # BusManager
 
-Buses with names, and a window to see them in. Instead of remembering that the
+Register busses with names, add a gui to create new entries, preview signal in busses and monitor them on the main out. Instead of remembering that the
 reverb send is bus 16, you call it `\reverb` and route to it by name — and you
-can watch a meter to see whether anything is actually going into it.
+can watch a meter to see whether anything is actually going into it and monitor the singal by ear.
 
 ```supercollider
 s.boot;
@@ -13,7 +13,7 @@ BusManager.gui;                  // add, remove, meter, listen
 ```
 
 It depends on nothing. If [ModuleCommon](../module%20common) happens to be
-installed alongside it, OneShot, LongSample and AdaptiveTextures start accepting
+installed alongside it, OneShot, LongSample and AdaptiveTextures and other modules start accepting
 names wherever they take a bus — see [modules](#modules) below.
 
 ## Install
