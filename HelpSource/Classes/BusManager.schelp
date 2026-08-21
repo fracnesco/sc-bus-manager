@@ -1,0 +1,225 @@
+TITLE:: BusManager
+summary:: buses with names, and a window to see them in
+categories:: Libraries>BusManager
+related:: Classes/BusManagerEntry, Classes/BusManagerGUI, Classes/Bus
+
+DESCRIPTION::
+A registry of buses under names, so a patch can say where it is sending sound
+instead of counting bus indices - and a window that shows what is in each of
+them.
+
+code::
+s.boot;
+BusManager.add(\reverb, 2);
+BusManager.gui;
+
+{ Out.ar(BusManager.index(\reverb), PinkNoise.ar(0.1) ! 2) }.play;
+::
+
+Everything is on the class: there is one registry per session, the way there is
+one server, and no instance to keep hold of.
+
+It depends on nothing. When link::Classes/ModuleCommon:: is installed alongside
+it, OneShot, LongSample and AdaptiveTextures accept a name wherever they take a
+bus, and a module set to a name follows it - see link::#Modules:: below.
+
+subsection:: Who owns the bus
+
+Three ways of putting a name in the registry, and which one you use decides who
+is allowed to free the bus behind it. This is the one thing the extension has to
+get right, so it is worth knowing which is which.
+
+table::
+## strong::kind:: || strong::made by:: || strong::freed on remove:: || strong::taken again after a boot::
+## code::\owned:: || code::add:: || yes || yes
+## code::\fixed:: || code::addIndex:: || no || no
+## code::\external:: || code::addBus:: || no || no
+::
+
+code::
+BusManager.add(\reverb, 2);                     // the registry allocates it
+BusManager.addIndex(\desk, 8, 2);               // a bare index
+BusManager.addBus(\drums, someModule.tapBus);   // somebody else's Bus
+::
+
+subsection:: Metering and listening
+
+Metering is one small synth per bus replying fifteen times a second. It is off
+until something asks for it: opening the window turns it on, closing it turns it
+off again.
+
+code::
+BusManager.meter_(true);
+BusManager.level(\reverb);          // the loudest channel right now
+BusManager.at(\reverb).levels;      // one per channel
+
+BusManager.listen(\reverb);         // hear it on the monitor output
+BusManager.listenOff;
+::
+
+One bus is listened to at a time. Listening to a bus that overlaps the monitor
+output is refused rather than played, since that is a feedback loop.
+
+subsection:: Modules
+
+code::
+m = OneShot(\drums, 16, outBus: \reverb);
+m.outBus = \out3_4;
+AdaptiveTextures(\tex, listen: \drums, out: \reverb);
+::
+
+Every bus field in those windows also grows a dropdown of the registry next to
+its number box - see link::Classes/ModuleBusMenu:: - so a bus can be picked by
+name rather than typed as a number.
+
+A module set to a name follows that name: when the bus behind it moves - which
+it does when the server reboots - the module goes with it. Setting the field to
+a plain index unbinds it again, and a name nothing knows changes nothing at all.
+Presets save the index and the name both, and restore the name when the registry
+knows it.
+
+
+CLASSMETHODS::
+
+METHOD:: add
+Allocate a bus and keep it under a name. Re-using a name replaces what was
+there, freeing it first.
+ARGUMENT:: name
+a Symbol.
+ARGUMENT:: channels
+how many channels. 2 by default.
+ARGUMENT:: rate
+code::\audio:: or code::\control::. code::\audio:: by default.
+RETURNS:: the link::Classes/BusManagerEntry::, or nil if the server had no buses left.
+
+METHOD:: addIndex
+Name a bare index the registry did not allocate - hardware channels, or a bus
+you are keeping track of yourself. Never freed by the registry.
+
+METHOD:: addBus
+Name a link::Classes/Bus:: that belongs to something else: a module's tapBus, a
+SuperDirt orbit, an Ndef's bus. Never freed and never re-allocated.
+
+METHOD:: addHardware
+Seed the ins and outs of the current audio device as stereo pairs -
+code::\out1_2::, code::\out3_4::, code::\in1_2:: and so on. Done once the first
+time the registry is used; call it again after changing device.
+
+METHOD:: remove
+Take a name out. An owned bus is freed. Modules still following the name are
+named in a warning rather than stopped.
+
+METHOD:: rename
+Give a bus a different name. Refused if the new name is taken.
+
+METHOD:: clear
+Empty the registry: frees what it owns, lets go of what it does not.
+
+METHOD:: at
+The link::Classes/BusManagerEntry:: under a name, or nil.
+
+METHOD:: bus
+The link::Classes/Bus:: under a name, or nil.
+
+METHOD:: index
+The bus index under a name, or nil. This is what a routing argument wants.
+
+METHOD:: includes
+Whether a name is in the registry.
+
+METHOD:: names
+Every name, in the order they were added.
+
+METHOD:: size
+How many buses are registered.
+
+METHOD:: level
+The loudest channel of a bus right now. 0 unless metering is on.
+
+METHOD:: meter
+METHOD:: meter_
+Whether the meters are running. Off by default; the window turns it on while it
+is open.
+
+METHOD:: listen
+Route one bus to the monitor output so you can hear it. Starting another stops
+the first. Refused for a control bus, and for a bus overlapping the monitor
+output.
+
+METHOD:: listenOff
+Stop listening.
+
+METHOD:: isListeningTo
+Whether that name is the one being listened to.
+
+METHOD:: monitoring
+The entry being listened to, or nil.
+
+METHOD:: monitorOut
+METHOD:: monitorOut_
+Where listening goes. 0 by default. Moving it onto the bus being listened to
+stops the monitor rather than making a loop.
+
+METHOD:: monitorAmp
+METHOD:: monitorAmp_
+Monitor level, 0 to 2. 0.5 by default.
+
+METHOD:: saveLayout
+METHOD:: loadLayout
+The set of declared buses, written to one code::.scd:: file and read back. A
+bare name lands in the repository's code::layouts:: folder. Loading replaces
+owned and fixed entries and leaves external ones alone. Nothing is ever restored
+automatically.
+
+METHOD:: layouts
+The layout files on disk, newest first - what the window's dropdown offers.
+
+METHOD:: layoutDir
+Where they live.
+
+METHOD:: entries
+Every link::Classes/BusManagerEntry::, in order.
+
+METHOD:: server
+METHOD:: server_
+The server the registry allocates on. link::Classes/Server::.default unless set.
+Setting it empties the registry.
+
+METHOD:: gui
+Open the window, or bring it to the front. link::Classes/BusManagerGUI::.
+
+METHOD:: meterRate
+How many times a second a meter reports. 15.
+
+
+EXAMPLES::
+
+code::
+s.boot;
+
+// a bus, and a window to watch it in
+BusManager.add(\reverb, 2);
+BusManager.gui;
+
+// something to look at
+~noise = { Out.ar(BusManager.index(\reverb), PinkNoise.ar(0.1) ! 2) }.play;
+
+BusManager.level(\reverb);      // moving
+BusManager.listen(\reverb);     // and now audible
+BusManager.listenOff;
+~noise.free;
+
+// naming a bus somebody else made: never freed by the registry
+BusManager.addBus(\borrowed, Bus.audio(s, 2));
+
+// the interface is already in there
+BusManager.names;
+
+// save the lot, and get it back
+BusManager.saveLayout("tonight");
+BusManager.clear;
+BusManager.loadLayout("tonight");
+::
+
+There is a longer walkthrough in code::examples/bus-manager-demo.scd:: in the
+repository.
