@@ -274,9 +274,10 @@ The registry registers with `ServerBoot`, `ServerTree` and `ServerQuit`:
 ## Issues
 
 Bug reports and questions are welcome in
-[Issues](https://github.com/fracnesco/sc-bus-manager/issues). If something
-misbehaves, the post window usually has the half of the story I need.
+[Issues](https://github.com/fracnesco/sc-bus-manager/issues).
 
 ## License
 
-MIT — see [LICENSE](LICENSE).
+GPL-3.0-or-later — see [LICENSE](LICENSE). The same family of licence
+SuperCollider itself is under: use it, change it, pass it on, and anything you
+build on top of it stays as free as this is.

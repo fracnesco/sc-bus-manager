@@ -1,3 +1,7 @@
+// BusManager - Copyright (c) 2026 Francesco Corvi
+// Free software under the GNU General Public License, version 3 or later.
+// No warranty of any kind; see the LICENSE file in this repository.
+
 // =====================================================================
 // BusManagerEntry - one named bus in the registry
 //
